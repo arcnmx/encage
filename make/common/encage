@@ -1,0 +1,46 @@
+#!/bin/bash
+set -eu
+
+encage-run() {
+	local unshare="exec unshare -impuf"
+	$unshare "$ENCAGE" exec "$@"
+}
+
+encage-exec() {
+	if [ -n "${ENCAGE_OVERLAY+x}" ]; then
+		newroot=`mktemp -d`
+		mkdir -p "$ENCAGE_OVERLAY_WORK"
+		mount -t overlay overlay -o lowerdir="$ENCAGE_OVERLAY",upperdir="$ENCAGE_ROOT",workdir="$ENCAGE_OVERLAY_WORK" "$newroot"
+		ENCAGE_ROOT="$newroot"
+	fi
+
+	mkdir -p "$ENCAGE_ROOT"/{mnt,proc,sys,dev,tmp}
+	mount -t proc proc "$ENCAGE_ROOT/proc"
+	mount -t sysfs sys "$ENCAGE_ROOT/sys"
+	mount -t tmpfs none "$ENCAGE_ROOT/tmp"
+	mount -t devtmpfs dev "$ENCAGE_ROOT/dev"
+	mkdir -p "$ENCAGE_ROOT/dev/"{pts,shm}
+	mount -t tmpfs tmpfs "$ENCAGE_ROOT/dev/shm"
+	mount --bind /dev/pts "$ENCAGE_ROOT/dev/pts"
+
+	if [ -n "${ENCAGE_MOUNT+x}" ]; then
+		for mount in `echo "$ENCAGE_MOUNT" | tr ';' ' '`; do
+			mount_src=`echo "$mount" | cut -d : -f 1`
+			mount_dest=`echo "$mount" | cut -d : -f 2`
+			mkdir -p "$ENCAGE_ROOT/$mount_dest"
+			mount --bind "$mount_src" "$ENCAGE_ROOT/$mount_dest"
+		done
+	fi
+
+	exec env -i ENCAGE_ROOT=/ PATH="/bin:/sbin:/usr/bin:/usr/sbin" chroot "$ENCAGE_ROOT" "$@"
+}
+
+ENCAGE="$0"
+COMMAND="$1"
+shift 1
+
+case $COMMAND in
+	*)
+		encage-$COMMAND "$@"
+		;;
+esac
