@@ -1,0 +1,9 @@
+systemd-nspawn-like command
+ocf-like images
+runc-like command
+ - with override for command to run
+actool-like build system
+ - nothing fancy, just build recipes
+    - build
+    - commands
+cargo-like depdency resolution system

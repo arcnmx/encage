@@ -1,0 +1,14 @@
+[package]
+name = "encage-build-bin"
+version = "0.0.1"
+authors = []
+
+[[bin]]
+name = "encage-build"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "1.5", default-features = false }
+encage-build = { path = ".." }
+encage-build-schema = { path = "../schema" }
+encage-build-dag = { path = "../dag" }

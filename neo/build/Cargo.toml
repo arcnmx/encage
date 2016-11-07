@@ -1,0 +1,8 @@
+[package]
+name = "encage-build"
+version = "0.0.1"
+authors = []
+
+[dependencies]
+encage-build-dag = { path = "dag" }
+encage-build-schema = { path = "schema" }

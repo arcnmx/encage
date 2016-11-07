@@ -1,0 +1,31 @@
+[image]
+dest = "out_dir"
+
+[[mount]]
+type = "bind"
+name = "res"
+src = "."
+
+[[command]]
+type = "copy"
+src = "busybox-x86_64"
+dest = "/sbin/busybox"
+mode = "6755"
+
+[[command]]
+type = "ocf"
+root = "some/container"
+command = "echo hi > $ENCAGE_TARGET/hi"
+
+[[command]]
+type = "host"
+command = "gcc {{path mount res}}/busybox.c -o $ENCAGE_TARGET/sbin/busybox2"
+
+[[command]]
+type = "image"
+cwd = "{{env ENCAGE_ROOT}}"
+# cwd = "{{path root}}"
+commands = [
+	["/sbin/busybox", "mkdir", "-p", "bin"],
+	["/sbin/busybox", "--install", "-s", "./"],
+]
