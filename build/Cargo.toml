@@ -1,0 +1,19 @@
+[package]
+name = "encage-build"
+version = "0.0.1"
+authors = ["arcnmx"]
+
+[dependencies]
+serde-value = "^0.0.2"
+toml = { version = "^0.1.25", default-features = false, features = ["serde"] }
+typemap = { version = "^0.3.3" }
+unsafe-any = "^0.4.1"
+semver = "^0.2.1"
+serde = "^0.6.7"
+serde_macros = "^0.6.5"
+solvent = "^0.7.0"
+snowflake = "^1.1.0"
+hyper = "^0.7.2"
+url = { version = "^0.5.2", features = ["serde_serialization"] }
+filesystem = { version = "^0.0.1", git = "https://github.com/arcnmx/filesystem.rs" }
+handlebars = { version = "^0.12.1", git = "https://github.com/sunng87/handlebars-rust", branch = "feature/serde-feature", features = ["serde_type"] }

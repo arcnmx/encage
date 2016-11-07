@@ -1,0 +1,69 @@
+[package]
+name = "encage.hello-demo"
+version = "0.0.1"
+plugins = ["base", "handlebars"]
+
+
+# dep stages
+
+# Depends
+# stage: Depends Files
+# BuildCommands: stage
+# Commands: stage BuildCommands
+# image: *
+
+[[image]]
+name = ".busybox"
+#type = "host"
+vars = { arch = "x86_64" }
+files = [ { dest = "/sbin/busybox", src = "http://www.busybox.net/downloads/binaries/busybox-{{vars.arch}}", perms = "6755" } ]
+commands = [
+	["busybox", "sh", "-ec", """
+	busybox --list-all | {
+		while read path; do
+			busybox mkdir -p "{{path.root}}/$(busybox dirname "$path")"
+			busybox ln -s "{{path.root}}/sbin/busybox" "{{path.root}}/$path"
+		done
+	}
+	"""],
+]
+
+
+[[image]]
+name = ".cdebootstrap"
+build = ".busybox"
+vars = { version = "0.7.1", arch = "amd64" }
+files = [ { src = "http://ftp.debian.org/debian/pool/main/c/cdebootstrap/cdebootstrap-static_{{vars.version}}_{{vars.arch}}.deb" } ]
+build-commands = """
+ar -p "{{files "cdebootstrap-static_{{vars.version}}_{{vars.arch}}.deb"}}" data.tar.xz | tar -xj -C "{{path.target}}"
+ln -s cdebootstrap-static "{{path.target}}/usr/bin/cdebootstrap"
+"""
+
+
+[[image]]
+name = ".arch-bootstrap"
+build = ".busybox"
+vars = { version = "2016.01.01", arch = "x86_64" }
+files = [ { src = "http://mirrors.kernel.org/archlinux/iso/{{vars.version}}/archlinux-bootstrap-{{vars.version}}-{{vars.arch}}.tar.gz" } ]
+build-commands = """
+tar -x -f "{{files "archlinux-bootstrap-{{vars.version}}-{{vars.arch}}.tar.gz"}}" -C "{{path.target}}"
+mv "{{path.target}}/root.{{vars.arch}}/"* "{{path.target}}"
+rmdir "{{path.target}}/root.{{vars.arch}}"
+"""
+commands = """
+pacman-key --init
+pacman-key --populate archlinux
+"""
+
+
+[[image]]
+name = ".arch"
+build = ".arch-bootstrap"
+build-commands = "pacstrap -cdM \"{{path.target}}\" base"
+
+
+[[image]]
+name = ".arch-devel"
+depends = ".arch"
+build = ".arch-bootstrap"
+build-commands = "pacstrap -cdM \"{{path.target}}\" base-devel"
